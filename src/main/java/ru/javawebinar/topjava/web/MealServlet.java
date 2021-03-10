@@ -21,12 +21,13 @@ public class MealServlet extends HttpServlet {
 
     private static final Logger log = getLogger(MealServlet.class);
 
-   @Override
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-       List<MealTo> mealsTo = MealsUtil.filteredByStreams(MealsUtil.MEALS, START_TIME, END_TIME, CALORIES_PER_DAY);
+        log.debug("redirect to meals");
+        List<MealTo> mealsTo = MealsUtil.filteredByStreams(MealsUtil.MEALS, START_TIME, END_TIME, CALORIES_PER_DAY);
 
         request.setAttribute("meals", mealsTo);
-        request.getRequestDispatcher("/meals.jsp").forward(request, response);
+        request.getRequestDispatcher("meals.jsp").forward(request, response);
 
     }
 }
