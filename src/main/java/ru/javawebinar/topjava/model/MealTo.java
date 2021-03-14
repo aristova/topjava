@@ -30,7 +30,7 @@ public class MealTo {
         this.excess = excess;
     }
 
-    public Boolean getExcess() { return excess; }
+    public boolean isExcess() { return excess; }
 
     public LocalDateTime getDateTime() { return dateTime; }
 
