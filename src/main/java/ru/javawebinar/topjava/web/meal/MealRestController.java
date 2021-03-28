@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.to.MealTo;
+import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
@@ -48,8 +50,8 @@ public class MealRestController {
         service.update(meal);
     }
 
-    public Collection<Meal> getAll() {
-        return service.getAll(SecurityUtil.authUserId());
+    public Collection<MealTo> getAll() {
+        Collection<Meal> meals = service.getAll(SecurityUtil.authUserId());
+        return MealsUtil.getTos(meals, SecurityUtil.authUserCaloriesPerDay());
     }
-
 }
