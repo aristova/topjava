@@ -1,7 +1,5 @@
 package ru.javawebinar.topjava.web;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import ru.javawebinar.topjava.model.Meal;
@@ -17,8 +15,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class MealServlet extends HttpServlet {
-    private static final Logger log = LoggerFactory.getLogger(MealServlet.class);
-
     private MealRestController mealRestController;
     private ConfigurableApplicationContext appCtx;
 
@@ -38,20 +34,16 @@ public class MealServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String id = request.getParameter("id");
 
+        Meal meal = new Meal(
+                id.isEmpty() ? null : Integer.parseInt(id),
+                LocalDateTime.parse(request.getParameter("dateTime")),
+                request.getParameter("description"),
+                Integer.parseInt(request.getParameter("calories")));
+
         if (id.isEmpty()) {
-            mealRestController.create(new Meal(
-                    null,
-                    LocalDateTime.parse(request.getParameter("dateTime")),
-                    request.getParameter("description"),
-                    Integer.parseInt(request.getParameter("calories")),
-                    SecurityUtil.authUserId()));
+            mealRestController.create(meal);
         } else {
-            mealRestController.update(new Meal(
-                    Integer.parseInt(id),
-                    LocalDateTime.parse(request.getParameter("dateTime")),
-                    request.getParameter("description"),
-                    Integer.parseInt(request.getParameter("calories")),
-                    SecurityUtil.authUserId()));
+            mealRestController.update(meal);
         }
         response.sendRedirect("meals");
     }
@@ -59,8 +51,6 @@ public class MealServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
-        log.debug("action " + action);
-
         switch (action == null ? "all" : action) {
             case "delete":
                 int id = getId(request);
@@ -70,12 +60,11 @@ public class MealServlet extends HttpServlet {
             case "create":
             case "update":
                 final Meal meal = "create".equals(action) ?
-                        mealRestController.create(new Meal(
+                        new Meal(
                                 null,
                                 LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
                                 "",
-                                1000,
-                                SecurityUtil.authUserId())) :
+                                1000) :
                         mealRestController.get(getId(request));
                 request.setAttribute("meal", meal);
                 request.getRequestDispatcher("/mealForm.jsp").forward(request, response);

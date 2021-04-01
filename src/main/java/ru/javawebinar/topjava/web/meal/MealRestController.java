@@ -6,7 +6,6 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
-import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
 import java.util.Collection;
@@ -20,34 +19,20 @@ public class MealRestController {
     private MealService service;
 
     public Meal get(int id) {
-        Meal meal = service.get(id);
-        int authUserId = SecurityUtil.authUserId();
-        if (meal.getUserId() != authUserId) {
-            throw new NotFoundException("Not found entity with user.id = " + authUserId + " and meal.id = " + meal.getUserId());
-        }
-        return meal;
+        return service.get(id, SecurityUtil.authUserId());
     }
 
     public void delete(int id) {
-        Meal meal = service.get(id);
-        int authUserId = SecurityUtil.authUserId();
-        if (meal.getUserId() != authUserId) {
-            throw new NotFoundException("Not found entity with user.id = " + authUserId + " and meal.id = " + meal.getUserId());
-        }
-        service.delete(id);
+        service.delete(id, SecurityUtil.authUserId());
     }
 
     public Meal create(Meal meal) {
-        return service.create(meal);
+        return service.create(meal, SecurityUtil.authUserId());
     }
 
     public void update(Meal meal) {
-        int authUserId = SecurityUtil.authUserId();
-        if (meal.getUserId() != authUserId) {
-            throw new NotFoundException("Not found entity with user.id = " + authUserId + " and meal.id = " + meal.getUserId());
-        }
         assureIdConsistent(meal, meal.getId());
-        service.update(meal);
+        service.update(meal, SecurityUtil.authUserId());
     }
 
     public Collection<MealTo> getAll() {
