@@ -25,5 +25,11 @@
         <servlet-name>mealServlet</servlet-name>
         <url-pattern>/meals</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>mealServlet</servlet-name>
+        <url-pattern>/filter</url-pattern>
+    </servlet-mapping>
+
+
 
 </web-app>
