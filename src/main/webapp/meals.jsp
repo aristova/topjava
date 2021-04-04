@@ -23,15 +23,14 @@
     <h2>Meals</h2>
     <form method="get" action="filter">
         From date:
-        <input type="date" name="fromDate" value="">
+        <input type="date" name="fromDate" value="<%=request.getParameter("fromDate") %>">
         To date:
-        <input type="date" name="toDate" value="">
+        <input type="date" name="toDate" value="<%=request.getParameter("toDate") %>">
         From time:
-        <input type="time" name="fromTime" value="">
+        <input type="time" name="fromTime" value="<%=request.getParameter("fromTime") %>">
         To time:
-        <input type="time" name="toTime" value="">
+        <input type="time" name="toTime" value="<%=request.getParameter("toTime") %>">
         <input name="filter" type="Submit" value="filter">
-
     </form>
 
     <a href="meals?action=create">Add Meal</a>
