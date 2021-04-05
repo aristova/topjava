@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -42,8 +43,8 @@ public class UserServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String id = request.getParameter("id");
-        SecurityUtil.setAuthUserId(Integer.parseInt(id));
+        String paramId = Objects.requireNonNull(request.getParameter("id"));
+        SecurityUtil.setAuthUserId(Integer.parseInt(paramId));
         request.setAttribute("meals", mealRestController.getAll());
         request.getRequestDispatcher("/meals.jsp").forward(request, response);
     }
