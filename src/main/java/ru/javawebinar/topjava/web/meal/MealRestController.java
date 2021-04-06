@@ -45,7 +45,7 @@ public class MealRestController {
     }
 
     public Object filterByDateTime(LocalDate fromDate, LocalDate toDate, LocalTime fromTime, LocalTime toTime) {
-        Collection<Meal> meals = service.getAll(SecurityUtil.authUserId());
-        return MealsUtil.getTosFilteredDateTime(meals, SecurityUtil.authUserCaloriesPerDay(), fromDate, toDate, fromTime, toTime);
+        Collection<Meal> meals = service.getFilteredDate(SecurityUtil.authUserId(), fromDate, toDate, fromTime, toTime);
+        return MealsUtil.getFilteredTos(meals, SecurityUtil.authUserCaloriesPerDay(), fromTime, toTime);
     }
 }

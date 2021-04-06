@@ -1,18 +1,12 @@
 package ru.javawebinar.topjava.util;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtil {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public static boolean isBetweenHalfOpenTime(LocalTime lt, LocalTime startTime, LocalTime endTime) {
-        return (startTime == null || lt.compareTo(startTime) >= 0) && (endTime == null || lt.compareTo(endTime) <= 0);
-    }
-
-    public static boolean isBetweenHalfOpenDate(LocalDate ld, LocalDate startDate, LocalDate endDate) {
+    public static <T extends Comparable<T>> boolean isBetweenHalfOpen(T ld, T startDate, T endDate) {
         return (startDate == null || ld.compareTo(startDate) >= 0) && (endDate == null || ld.compareTo(endDate) <= 0);
     }
 
