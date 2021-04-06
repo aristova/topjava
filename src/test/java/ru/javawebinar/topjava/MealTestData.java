@@ -12,10 +12,10 @@ public class MealTestData {
     public static final int MEAL_ID = START_SEQ + 2;
     public static final int NOT_FOUND = 10;
 
-    public static final Meal meal = new Meal(MEAL_ID, LocalDateTime.now(), "Завтрак", 300);
+    public static final Meal meal = new Meal(MEAL_ID, LocalDateTime.now(), "Breakfast", 300);
 
     public static Meal getNew() {
-        return new Meal(null, LocalDateTime.now(), "Завтрак", 300);
+        return new Meal(null, LocalDateTime.now(), "Breakfast", 300);
     }
 
     public static Meal getUpdated() {

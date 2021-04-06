@@ -51,7 +51,7 @@ public class MealServiceTest {
     @Test
     public void duplicateMailCreate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        LocalDateTime dateDateTime = LocalDateTime.parse("2021-02-11 09:00", formatter);
+        LocalDateTime dateDateTime = LocalDateTime.parse("2021-01-01 09:00", formatter);
         assertThrows(DataAccessException.class, () ->
                 service.create(new Meal(null, dateDateTime, "Duplicate breakfast", 500), USER_ID));
     }
