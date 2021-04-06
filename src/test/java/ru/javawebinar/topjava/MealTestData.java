@@ -10,12 +10,15 @@ import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
 
 public class MealTestData {
     public static final int MEAL_ID = START_SEQ + 2;
+    public static final int MEAL_ID_2 = START_SEQ + 3;
     public static final int NOT_FOUND = 10;
 
-    public static final Meal meal = new Meal(MEAL_ID, LocalDateTime.now(), "Breakfast", 300);
+    public static final Meal meal = new Meal(MEAL_ID, LocalDateTime.now(), "Завтрак", 300);
+    public static final Meal meal2 = new Meal(MEAL_ID_2, LocalDateTime.now(), "Обед", 400);
+
 
     public static Meal getNew() {
-        return new Meal(null, LocalDateTime.now(), "Breakfast", 300);
+        return new Meal(null, LocalDateTime.now(), "Завтрак", 300);
     }
 
     public static Meal getUpdated() {
