@@ -13,7 +13,9 @@ import ru.javawebinar.topjava.MealTestData;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -43,10 +45,10 @@ public class MealServiceTest {
     public void create() {
         Meal created = service.create(getNew(), USER_ID);
         Integer newId = created.getId();
-        Meal newUser = getNew();
-        newUser.setId(newId);
-        assertMatch(created, newUser);
-        assertMatch(service.get(newId, USER_ID), newUser);
+        Meal newMeal = getNew();
+        newMeal.setId(newId);
+        assertMatch(created, newMeal);
+        assertMatch(service.get(newId, USER_ID), newMeal);
     }
 
     @Test
@@ -89,7 +91,15 @@ public class MealServiceTest {
     @Test
     public void getAll() {
         List<Meal> all = service.getAll(USER_ID);
-        assertMatch(all, meal, meal2);
+        assertMatch(all, meal3, meal2, meal);
+    }
+
+    @Test
+    public void getBetweenInclusive() {
+        LocalDate startDate = LocalDate.of(2021, Month.JANUARY, 5);
+        LocalDate endDate = LocalDate.of(2021, Month.JANUARY, 5);
+        List<Meal> all = service.getBetweenInclusive(startDate, endDate, USER_ID);
+        assertMatch(all, meal3);
     }
 
     @Test
@@ -110,5 +120,4 @@ public class MealServiceTest {
         assertThrows(NotFoundException.class, () ->
                 service.update(updated, ADMIN_ID));
     }
-
 }
