@@ -90,8 +90,8 @@ public class MealServiceTest {
 
     @Test
     public void getAll() {
-        List<Meal> all = service.getAll(USER_ID);
-        assertMatch(all, meal3, meal2, meal);
+        List<Meal> all = service.getAll(ADMIN_ID);
+        assertMatch(all, meal7, meal6, meal5, meal4);
     }
 
     @Test
@@ -99,7 +99,7 @@ public class MealServiceTest {
         LocalDate startDate = LocalDate.of(2021, Month.JANUARY, 5);
         LocalDate endDate = LocalDate.of(2021, Month.JANUARY, 5);
         List<Meal> all = service.getBetweenInclusive(startDate, endDate, USER_ID);
-        assertMatch(all, meal3);
+        assertMatch(all, meal3, meal2);
     }
 
     @Test
