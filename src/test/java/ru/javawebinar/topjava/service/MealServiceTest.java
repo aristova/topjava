@@ -1,7 +1,13 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Stopwatch;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ContextConfiguration;
@@ -13,6 +19,9 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.MealTestData.*;
@@ -26,6 +35,32 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @RunWith(SpringRunner.class)
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
+    static Map<String, String> logsMap = new HashMap<>();
+    private static final int maxLength = 30;
+    private static final StringBuilder stringBuilder = new StringBuilder();
+
+    private static void logInfo(Description description, long nanos) {
+        String testName = description.getMethodName();
+        String logMessage = String.format("%s %s %d ms",
+                testName, " ", TimeUnit.NANOSECONDS.toMicros(nanos));
+        logger.info(logMessage);
+        logsMap.putIfAbsent(testName, String.format("%d ms", TimeUnit.NANOSECONDS.toMicros(nanos)));
+    }
+
+    @Rule
+    public Stopwatch stopwatch = new Stopwatch() {
+        @Override
+        protected void succeeded(long nanos, Description description) {
+            logInfo(description, nanos);
+        }
+
+        @Override
+        protected void failed(long nanos, Throwable e, Description description) {
+            logInfo(description, nanos);
+        }
+    };
 
     @Autowired
     private MealService service;
@@ -108,5 +143,16 @@ public class MealServiceTest {
     @Test
     public void getBetweenWithNullDates() {
         MEAL_MATCHER.assertMatch(service.getBetweenInclusive(null, null, USER_ID), meals);
+    }
+
+    @AfterClass
+    public static void after() {
+        for (String key : logsMap.keySet()) {
+            int spaceLength = maxLength - key.length();
+            String logMessage = String.format("%s %" + spaceLength + "s %s\n",
+                    key, " ", logsMap.get(key));
+            stringBuilder.append(logMessage);
+        }
+        System.out.println(stringBuilder);
     }
 }
