@@ -19,8 +19,6 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertThrows;
@@ -37,27 +35,20 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 public class MealServiceTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
-    static Map<String, String> logsMap = new HashMap<>();
-    private static final int maxLength = 30;
     private static final StringBuilder stringBuilder = new StringBuilder();
 
     private static void logInfo(Description description, long nanos) {
         String testName = description.getMethodName();
-        String logMessage = String.format("%s %s %d ms",
-                testName, " ", TimeUnit.NANOSECONDS.toMicros(nanos));
+        String logMessage = String.format("%n%-30s %d ms",
+                testName, TimeUnit.NANOSECONDS.toMillis(nanos));
         logger.info(logMessage);
-        logsMap.putIfAbsent(testName, String.format("%d ms", TimeUnit.NANOSECONDS.toMicros(nanos)));
+        stringBuilder.append(logMessage);
     }
 
     @Rule
     public Stopwatch stopwatch = new Stopwatch() {
         @Override
-        protected void succeeded(long nanos, Description description) {
-            logInfo(description, nanos);
-        }
-
-        @Override
-        protected void failed(long nanos, Throwable e, Description description) {
+        protected void finished(long nanos, Description description) {
             logInfo(description, nanos);
         }
     };
@@ -96,7 +87,6 @@ public class MealServiceTest {
         assertThrows(DataAccessException.class, () ->
                 service.create(new Meal(null, meal1.getDateTime(), "duplicate", 100), USER_ID));
     }
-
 
     @Test
     public void get() {
@@ -147,12 +137,6 @@ public class MealServiceTest {
 
     @AfterClass
     public static void after() {
-        for (String key : logsMap.keySet()) {
-            int spaceLength = maxLength - key.length();
-            String logMessage = String.format("%s %" + spaceLength + "s %s\n",
-                    key, " ", logsMap.get(key));
-            stringBuilder.append(logMessage);
-        }
-        System.out.println(stringBuilder);
+        logger.info("" + stringBuilder);
     }
 }
