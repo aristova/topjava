@@ -53,11 +53,6 @@ public class UserService {
     }
 
     public User getAllForUser(int userId) {
-//        User user = repository.getAllForUser(userId);
-//        Assert.notNull(user, "user must not be null");
-//        return user;
-
         return checkNotFoundWithId(repository.getAllForUser(userId), userId);
-
     }
 }
