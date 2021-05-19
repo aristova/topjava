@@ -39,4 +39,9 @@ public class InMemoryUserRepository extends InMemoryBaseRepository<User> impleme
                 .findFirst()
                 .orElse(null);
     }
+
+    @Override
+    public User getAllForUser(int userId) {
+        return null;
+    }
 }

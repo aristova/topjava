@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import ru.javawebinar.topjava.model.Meal;
+import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.web.SecurityUtil;
@@ -23,8 +25,11 @@ public class MealRestController {
 
     private final MealService service;
 
-    public MealRestController(MealService service) {
+    private final UserService userService;
+
+    public MealRestController(MealService service, UserService userService) {
         this.service = service;
+        this.userService = userService;
     }
 
     public Meal get(int id) {
@@ -72,5 +77,10 @@ public class MealRestController {
 
         List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
         return MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime);
+    }
+
+    public User getAllForUser() {
+        int userId = SecurityUtil.authUserId();
+        return userService.getAllForUser(userId);
     }
 }
