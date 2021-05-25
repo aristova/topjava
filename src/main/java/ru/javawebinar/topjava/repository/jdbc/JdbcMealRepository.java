@@ -34,8 +34,6 @@ abstract public class JdbcMealRepository implements MealRepository {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
-    public abstract MapSqlParameterSource getMapSqlParameterSource(Meal meal, int userId);
-
     @Override
     public Meal save(Meal meal, int userId) {
         MapSqlParameterSource map = getMapSqlParameterSource(meal, userId);
@@ -71,6 +69,8 @@ abstract public class JdbcMealRepository implements MealRepository {
         return jdbcTemplate.query(
                 "SELECT * FROM meals WHERE user_id=? ORDER BY date_time DESC", ROW_MAPPER, userId);
     }
+
+    public abstract MapSqlParameterSource getMapSqlParameterSource(Meal meal, int userId);
 
     @Override
     public abstract List<Meal> getBetweenHalfOpen(LocalDateTime startDateTime, LocalDateTime endDateTime, int userId);

@@ -19,7 +19,6 @@ public class PostgresMealRepository extends JdbcMealRepository {
     public PostgresMealRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         super(jdbcTemplate, namedParameterJdbcTemplate);
     }
-
     @Override
     public MapSqlParameterSource getMapSqlParameterSource(Meal meal, int userId) {
         return new MapSqlParameterSource()
@@ -35,10 +34,5 @@ public class PostgresMealRepository extends JdbcMealRepository {
         return jdbcTemplate.query(
                 "SELECT * FROM meals WHERE user_id=?  AND date_time >=  ? AND date_time < ? ORDER BY date_time DESC",
                 ROW_MAPPER, userId, startDateTime, endDateTime);
-    }
-
-    @Override
-    public Meal getForUser(int id, int userId) {
-        return null;
     }
 }

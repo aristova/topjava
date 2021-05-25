@@ -71,7 +71,7 @@ public class JpaUserRepository implements UserRepository {
     }
 
     @Override
-    public User getAllForUser(int userId) {
+    public User getWithMeals(int userId) {
         return null;
     }
 }

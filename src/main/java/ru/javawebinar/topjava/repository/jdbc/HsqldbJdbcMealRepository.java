@@ -21,6 +21,7 @@ public class HsqldbJdbcMealRepository extends JdbcMealRepository {
         super(jdbcTemplate, namedParameterJdbcTemplate);
     }
 
+
     @Override
     public MapSqlParameterSource getMapSqlParameterSource(Meal meal, int userId) {
         return new MapSqlParameterSource()
@@ -36,10 +37,5 @@ public class HsqldbJdbcMealRepository extends JdbcMealRepository {
         return jdbcTemplate.query(
                 "SELECT * FROM meals WHERE user_id=?  AND date_time >=  ? AND date_time < ? ORDER BY date_time DESC",
                 ROW_MAPPER, userId, Timestamp.valueOf(startDateTime), Timestamp.valueOf(endDateTime));
-    }
-
-    @Override
-    public Meal getForUser(int id, int userId) {
-        return null;
     }
 }

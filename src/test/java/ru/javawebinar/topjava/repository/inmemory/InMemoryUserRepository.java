@@ -41,7 +41,7 @@ public class InMemoryUserRepository extends InMemoryBaseRepository<User> impleme
     }
 
     @Override
-    public User getAllForUser(int userId) {
+    public User getWithMeals(int userId) {
         return null;
     }
 }
