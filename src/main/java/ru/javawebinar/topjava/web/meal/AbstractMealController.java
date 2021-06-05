@@ -20,7 +20,7 @@ import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 public class AbstractMealController {
-    private static final Logger log = LoggerFactory.getLogger(MealRestController.class);
+    protected static final Logger log = LoggerFactory.getLogger(MealRestController.class);
 
     @Autowired
     private MealService service;
@@ -32,10 +32,11 @@ public class AbstractMealController {
         return service.get(id, userId);
     }
 
-    public void delete(int id) {
+    public String delete(int id) {
         int userId = SecurityUtil.authUserId();
         log.info("delete meal {} for user {}", id, userId);
         service.delete(id, userId);
+        return null;
     }
 
     public List<MealTo> getAll() {

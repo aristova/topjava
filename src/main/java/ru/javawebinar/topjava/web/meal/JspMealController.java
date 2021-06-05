@@ -8,7 +8,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import ru.javawebinar.topjava.model.Meal;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+
+import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
+import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
 
 @Controller
 public class JspMealController extends AbstractMealController {
@@ -18,18 +24,22 @@ public class JspMealController extends AbstractMealController {
         return "meals";
     }
 
-    @RequestMapping(value = "/update", method = RequestMethod.GET)
-    public String show(Model model, HttpServletRequest request) {
-
-        // TODO Get from the parent class  mealController.get(getId(request));
+    @RequestMapping(value = "update", method = RequestMethod.GET)
+    public String edit(Model model, HttpServletRequest request) {
         Meal meal = super.get(super.getId(request));
         model.addAttribute("meal", meal);
-
         return "mealForm";
     }
 
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public String update(Model model, HttpServletRequest request) {
+    @RequestMapping(value = "create", method = RequestMethod.GET)
+    public String create(Model model, HttpServletRequest request) {
+        Meal meal = new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
+        model.addAttribute("meal", meal);
+        return "mealForm";
+    }
+
+    @RequestMapping(value = "store", method = RequestMethod.POST)
+    public String store(Model model, HttpServletRequest request) {
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
@@ -43,5 +53,21 @@ public class JspMealController extends AbstractMealController {
         return "redirect:meals";
     }
 
+    @RequestMapping(value = "delete", method = RequestMethod.GET)
+    public String delete(int id) {
+        super.delete(id);
+        return "redirect:meals";
+    }
+
+    @RequestMapping(value = "filter", method = RequestMethod.GET)
+    public String getBetween(HttpServletRequest request) {
+        LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
+        LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
+        LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
+        LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
+
+        request.setAttribute("meals", super.getBetween(startDate, startTime, endDate, endTime));
+        return "meals";
+    }
 
 }
