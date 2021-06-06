@@ -1,18 +1,26 @@
 package ru.javawebinar.topjava.repository.jdbc;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 @Transactional(readOnly = true)
@@ -74,6 +82,36 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public List<User> getAll() {
-        return jdbcTemplate.query("SELECT * FROM users ORDER BY name, email", ROW_MAPPER);
+        return jdbcTemplate.query("SELECT u.id, u.name, u.email, u.registered, u.enabled, ur.role FROM users u JOIN user_roles ur ON u.id=ur.user_id " +
+                " ORDER BY name, email", new ResultSetExtractor<List<User>>() {
+            @Override
+            public List<User> extractData(ResultSet rs) throws SQLException,
+                    DataAccessException {
+                List<User> list = new LinkedList<>();
+                while (rs.next()) {
+                    Integer id = rs.getInt("id");
+                    User currentUser = list.stream()
+                            .filter(p -> p.getId().equals(id))
+                            .findFirst().orElse(null);
+
+                    if (currentUser == null) {
+                        User e = new User();
+                        e.setId(rs.getInt("id"));
+                        e.setName(rs.getString("name"));
+                        e.setEmail(rs.getString("email"));
+                        e.setRegistered(rs.getTimestamp("registered"));
+                        e.setEnabled(rs.getBoolean("enabled"));
+                        e.setRoles(Collections.singletonList(Role.valueOf(rs.getString("role"))));
+                        list.add(e);
+
+                    } else {
+                        Set<Role> userRoles = currentUser.getRoles();
+                        userRoles.add(Role.valueOf(rs.getString("role")));
+                        currentUser.setRoles(userRoles);
+                    }
+                }
+                return list;
+            }
+        });
     }
 }
