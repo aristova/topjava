@@ -15,13 +15,13 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 import javax.validation.ConstraintViolationException;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.UserTestData.*;
 
 public abstract class AbstractUserServiceTest extends AbstractServiceTest {
-
     @Autowired
     protected UserService service;
 
@@ -33,7 +33,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
 
     @Before
     public void setup() {
-        cacheManager.getCache("users").clear();
+        Objects.requireNonNull(cacheManager.getCache("users")).clear();
         if (!isJdbcProfileActive()) {
             jpaUtil.clear2ndLevelHibernateCache();
         }
