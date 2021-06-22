@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -25,11 +23,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static ru.javawebinar.topjava.util.ValidationUtil.validateEntity;
+
 @Repository
 @Transactional(readOnly = true)
 public class JdbcUserRepository implements UserRepository {
-
-    private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -56,18 +54,18 @@ public class JdbcUserRepository implements UserRepository {
                     .findFirst().orElse(null);
 
             if (currentUser == null) {
-                User e = new User();
-                e.setId(rs.getInt("id"));
-                e.setName(rs.getString("name"));
-                e.setEmail(rs.getString("email"));
-                e.setPassword(rs.getString("password"));
-                e.setCaloriesPerDay(rs.getInt("calories_per_day"));
-                e.setRegistered(rs.getTimestamp("registered"));
-                e.setEnabled(rs.getBoolean("enabled"));
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password"));
+                user.setCaloriesPerDay(rs.getInt("calories_per_day"));
+                user.setRegistered(rs.getTimestamp("registered"));
+                user.setEnabled(rs.getBoolean("enabled"));
                 if (rs.getString("role") != null) {
-                    e.setRoles(Collections.singletonList(Role.valueOf(rs.getString("role"))));
+                    user.setRoles(Collections.singletonList(Role.valueOf(rs.getString("role"))));
                 }
-                list.add(e);
+                list.add(user);
             } else {
                 Set<Role> userRoles = currentUser.getRoles();
                 userRoles.add(Role.valueOf(rs.getString("role")));
@@ -77,7 +75,7 @@ public class JdbcUserRepository implements UserRepository {
         return list;
     }
 
-    public int[] batchInsert(List<User> users, String sql) {
+    private int[] batchInsert(List<User> users, String sql) {
 
         return this.jdbcTemplate.batchUpdate(
                 sql,
@@ -93,7 +91,6 @@ public class JdbcUserRepository implements UserRepository {
                         if (!users.get(i).isNew()) {
                             ps.setInt(7, users.get(i).getId());
                         }
-
                     }
 
                     public int getBatchSize() {
@@ -105,16 +102,15 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     @Transactional
     public User save(User user) {
-        BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
+        validateEntity(user);
 
-        StringBuilder sql = new StringBuilder("");
         List<User> users = Collections.singletonList(user);
 
         if (user.isNew()) {
             List<Integer> nextIdList = jdbcTemplate.queryForList("SELECT nextval('global_seq')", Integer.class);
             Integer nextId = nextIdList.get(0);
             Set<Role> roles = user.getRoles();
-            sql = new StringBuilder("insert into users (id, name, email, password, registered, enabled, calories_per_day) values (currval('global_seq'), ?, ?, ?, ?, ?, ?); ");
+            StringBuilder sql = new StringBuilder("insert into users (id, name, email, password, registered, enabled, calories_per_day) values (currval('global_seq'), ?, ?, ?, ?, ?, ?); ");
 
             if (!roles.isEmpty()) {
                 sql = new StringBuilder("with first_insert as (insert into users (id, name, email, password, registered, enabled, calories_per_day)" +
@@ -132,11 +128,10 @@ public class JdbcUserRepository implements UserRepository {
             batchInsert(users, sql.toString());
             user.setId(nextId);
             return user;
-
         }
 
         Set<Role> roles = user.getRoles();
-        sql = new StringBuilder("update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?");
+        StringBuilder sql = new StringBuilder("update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?");
 
         if (!roles.isEmpty()) {
             jdbcTemplate.update("delete from user_roles where user_id=?", user.getId());
