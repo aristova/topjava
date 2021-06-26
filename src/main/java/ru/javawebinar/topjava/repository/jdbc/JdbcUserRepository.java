@@ -18,10 +18,7 @@ import ru.javawebinar.topjava.repository.UserRepository;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static ru.javawebinar.topjava.util.ValidationUtil.validateEntity;
 
@@ -46,14 +43,14 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     private static List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
-        List<User> list = new ArrayList<>();
+        Map<Integer, User> map = new HashMap<>();
+
         while (rs.next()) {
             Integer id = rs.getInt("id");
-            User currentUser = list.stream()
-                    .filter(p -> p.getId() != null && p.getId().equals(id))
-                    .findFirst().orElse(null);
 
-            if (currentUser == null) {
+            User currentUser = map.get(id);
+
+            if (!map.containsKey(id)) {
                 User user = new User();
                 user.setId(rs.getInt("id"));
                 user.setName(rs.getString("name"));
@@ -65,19 +62,20 @@ public class JdbcUserRepository implements UserRepository {
                 if (rs.getString("role") != null) {
                     user.setRoles(Collections.singletonList(Role.valueOf(rs.getString("role"))));
                 }
-                list.add(user);
+                map.put(id, user);
+
             } else {
                 Set<Role> userRoles = currentUser.getRoles();
                 userRoles.add(Role.valueOf(rs.getString("role")));
                 currentUser.setRoles(userRoles);
             }
         }
-        return list;
+        return new ArrayList<>(map.values());
     }
 
-    private int[] batchInsert(List<User> users, String sql) {
+    private void batchInsert(List<User> users, String sql) {
 
-        return this.jdbcTemplate.batchUpdate(
+        this.jdbcTemplate.batchUpdate(
                 sql,
                 new BatchPreparedStatementSetter() {
                     @Override
@@ -110,44 +108,26 @@ public class JdbcUserRepository implements UserRepository {
             List<Integer> nextIdList = jdbcTemplate.queryForList("SELECT nextval('global_seq')", Integer.class);
             Integer nextId = nextIdList.get(0);
             Set<Role> roles = user.getRoles();
-            StringBuilder sql = new StringBuilder("insert into users (id, name, email, password, registered, enabled, calories_per_day) values (currval('global_seq'), ?, ?, ?, ?, ?, ?); ");
+            batchInsert(users, "insert into users (id, name, email, password, registered, enabled, calories_per_day) values (currval('global_seq'), ?, ?, ?, ?, ?, ?)");
+            user.setId(nextId);
 
             if (!roles.isEmpty()) {
-                sql = new StringBuilder("with first_insert as (insert into users (id, name, email, password, registered, enabled, calories_per_day)" +
-                        " values (currval('global_seq'), ?, ?, ?, ?, ?, ?)  returning id) " +
-                        "insert into user_roles (user_id, role) values ");
-                List<String> valuesList = new ArrayList<>();
                 for (Role role : roles) {
-                    String string = String.format("(currval('global_seq'), '%s')", role.name());
-                    valuesList.add(string);
+                    jdbcTemplate.update("insert into user_roles (user_id, role) values (currval('global_seq'), ?)", role.name());
                 }
-                String valuesString = String.join(", ", valuesList);
-                sql.append(valuesString);
             }
 
-            batchInsert(users, sql.toString());
-            user.setId(nextId);
             return user;
         }
 
         Set<Role> roles = user.getRoles();
-        StringBuilder sql = new StringBuilder("update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?");
-
+        batchInsert(users, "update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?");
         if (!roles.isEmpty()) {
             jdbcTemplate.update("delete from user_roles where user_id=?", user.getId());
-
-            sql = new StringBuilder("with first_update as (update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?) " +
-                    "insert into user_roles (user_id, role) values ");
-            List<String> valuesList = new ArrayList<>();
             for (Role role : roles) {
-                String string = String.format("(%d, '%s')", user.getId(), role.name());
-                valuesList.add(string);
+                jdbcTemplate.update("insert into user_roles (user_id, role) values (?, ?)", user.getId(), role.name());
             }
-            String valuesString = String.join(", ", valuesList);
-            sql.append(valuesString);
         }
-
-        batchInsert(users, sql.toString());
         return user;
     }
 
