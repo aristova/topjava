@@ -3,8 +3,8 @@ package ru.javawebinar.topjava.repository.jdbc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -15,12 +15,9 @@ import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-
-import static ru.javawebinar.topjava.util.ValidationUtil.validateEntity;
 
 @Repository
 @Transactional(readOnly = true)
@@ -73,61 +70,39 @@ public class JdbcUserRepository implements UserRepository {
         return new ArrayList<>(map.values());
     }
 
-    private void batchInsert(List<User> users, String sql) {
+    private void deleteRoles(int userId) {
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id = ?", userId);
+    }
 
-        this.jdbcTemplate.batchUpdate(
-                sql,
-                new BatchPreparedStatementSetter() {
-                    @Override
-                    public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        ps.setString(1, users.get(i).getName());
-                        ps.setString(2, users.get(i).getEmail());
-                        ps.setString(3, users.get(i).getPassword());
-                        ps.setDate(4, new java.sql.Date(users.get(i).getRegistered().getTime()));
-                        ps.setBoolean(5, users.get(i).isEnabled());
-                        ps.setInt(6, users.get(i).getCaloriesPerDay());
-                        if (!users.get(i).isNew()) {
-                            ps.setInt(7, users.get(i).getId());
-                        }
-                    }
+    private void insertRoles(User user) {
+        Set<Role> roles = user.getRoles();
 
-                    public int getBatchSize() {
-                        return users.size();
-                    }
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO user_roles (user_id, role) VALUES (?, ?)",
+                roles,
+                roles.size(),
+                (ps, role) -> {
+                    ps.setLong(1, user.id());
+                    ps.setString(2, role.name());
                 });
     }
 
     @Override
     @Transactional
     public User save(User user) {
-        validateEntity(user);
-
-        List<User> users = Collections.singletonList(user);
+        BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
 
         if (user.isNew()) {
-            List<Integer> nextIdList = jdbcTemplate.queryForList("SELECT nextval('global_seq')", Integer.class);
-            Integer nextId = nextIdList.get(0);
-            Set<Role> roles = user.getRoles();
-            batchInsert(users, "insert into users (id, name, email, password, registered, enabled, calories_per_day) values (currval('global_seq'), ?, ?, ?, ?, ?, ?)");
-            user.setId(nextId);
-
-            if (!roles.isEmpty()) {
-                for (Role role : roles) {
-                    jdbcTemplate.update("insert into user_roles (user_id, role) values (currval('global_seq'), ?)", role.name());
-                }
-            }
-
-            return user;
+            Number newKey = insertUser.executeAndReturnKey(parameterSource);
+            user.setId(newKey.intValue());
+        } else if (namedParameterJdbcTemplate.update("""
+                   UPDATE users SET name=:name, email=:email, password=:password, 
+                   registered=:registered, enabled=:enabled, calories_per_day=:caloriesPerDay WHERE id=:id
+                """, parameterSource) == 0) {
+            return null;
         }
-
-        Set<Role> roles = user.getRoles();
-        batchInsert(users, "update users set name = ?, email = ?, password = ?, registered = ?, enabled = ?, calories_per_day = ? where id = ?");
-        if (!roles.isEmpty()) {
-            jdbcTemplate.update("delete from user_roles where user_id=?", user.getId());
-            for (Role role : roles) {
-                jdbcTemplate.update("insert into user_roles (user_id, role) values (?, ?)", user.getId(), role.name());
-            }
-        }
+        deleteRoles(user.getId());
+        insertRoles(user);
         return user;
     }
 
