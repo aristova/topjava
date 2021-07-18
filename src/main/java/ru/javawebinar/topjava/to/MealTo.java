@@ -1,7 +1,13 @@
 package ru.javawebinar.topjava.to;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDateTime;
 
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
+
+@JsonAutoDetect(fieldVisibility = ANY)
 public class MealTo {
     private final Integer id;
 
@@ -11,6 +17,7 @@ public class MealTo {
 
     private final int calories;
 
+    @JsonIgnore
     private final boolean excess;
 
     public MealTo(Integer id, LocalDateTime dateTime, String description, int calories, boolean excess) {
